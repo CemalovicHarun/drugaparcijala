@@ -4,6 +4,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.TextField;
 import javafx.stage.Stage;
@@ -15,6 +16,8 @@ public class GradController {
     public TextField fieldBrojStanovnika;
     public ChoiceBox<Drzava> choiceDrzava;
     public ObservableList<Drzava> listDrzave;
+    public CheckBox cbUniverzitetski;
+    public TextField fieldNazivUniverziteta;
     private Grad grad;
 
     public GradController(Grad grad, ArrayList<Drzava> drzave) {
@@ -33,6 +36,14 @@ public class GradController {
             for (Drzava drzava : listDrzave)
                 if (drzava.getId() == grad.getDrzava().getId())
                     choiceDrzava.getSelectionModel().select(drzava);
+            if (grad instanceof UniverzitetskiGrad) {
+                cbUniverzitetski.setSelected(true);
+                fieldNazivUniverziteta.setDisable(false);
+                fieldNazivUniverziteta.setText(((UniverzitetskiGrad)grad).getNazivUniverziteta());
+            } else {
+                cbUniverzitetski.setSelected(false);
+                fieldNazivUniverziteta.setDisable(true);
+            }
         } else {
             choiceDrzava.getSelectionModel().selectFirst();
         }
@@ -76,13 +87,36 @@ public class GradController {
             fieldBrojStanovnika.getStyleClass().add("poljeIspravno");
         }
 
+        if (cbUniverzitetski.isSelected()) {
+            if (fieldNazivUniverziteta.getText().trim().isEmpty()) {
+                fieldNazivUniverziteta.getStyleClass().removeAll("poljeIspravno");
+                fieldNazivUniverziteta.getStyleClass().add("poljeNijeIspravno");
+                sveOk = false;
+            } else {
+                fieldNazivUniverziteta.getStyleClass().removeAll("poljeNijeIspravno");
+                fieldNazivUniverziteta.getStyleClass().add("poljeIspravno");
+            }
+        }
+
         if (!sveOk) return;
 
         if (grad == null) grad = new Grad();
-        grad.setNaziv(fieldNaziv.getText());
-        grad.setBrojStanovnika(Integer.parseInt(fieldBrojStanovnika.getText()));
-        grad.setDrzava(choiceDrzava.getValue());
+        if (cbUniverzitetski.isSelected()) {
+            grad = new UniverzitetskiGrad(grad.getId(), fieldNaziv.getText(), Integer.parseInt(fieldBrojStanovnika.getText()), choiceDrzava.getValue(), fieldNazivUniverziteta.getText());
+        } else {
+            grad = new Grad(grad.getId(), fieldNaziv.getText(), Integer.parseInt(fieldBrojStanovnika.getText()), choiceDrzava.getValue());
+        }
+
         Stage stage = (Stage) fieldNaziv.getScene().getWindow();
         stage.close();
     }
+
+
+    public void cbAction(ActionEvent actionEvent) {
+        if (cbUniverzitetski.isSelected())
+            fieldNazivUniverziteta.setDisable(false);
+        else
+            fieldNazivUniverziteta.setDisable(true);
+    }
+
 }
